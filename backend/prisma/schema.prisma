@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id             Int      @id @default(autoincrement())
+  productName    String
+  description    String
+  originalImage  String?
+  prompt         String?
+  generatedImage String?
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
