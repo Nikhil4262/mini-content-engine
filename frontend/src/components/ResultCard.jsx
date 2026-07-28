@@ -1,24 +1,18 @@
+const BACKEND_URL = import.meta.env.VITE_API_URL.replace("/api", "");
+
 function ResultCard({ result }) {
   return (
     <div className="result-card">
-
-      <div className="success-box">
-        ✅ Content generated successfully!
-      </div>
-
       <h2>Generated Result</h2>
 
-      <div className="status">
-        {result.status}
-      </div>
+      <span className="status">{result.status}</span>
 
       <div className="images">
-
         <div>
           <h3>Original Image</h3>
 
           <img
-            src={`http://localhost:5000/uploads/${result.originalImage}`}
+            src={`${BACKEND_URL}/uploads/${result.originalImage}`}
             alt="Original"
           />
         </div>
@@ -27,19 +21,15 @@ function ResultCard({ result }) {
           <h3>Generated Image</h3>
 
           <img
-            src={`http://localhost:5000${result.generatedImage}`}
+            src={`${BACKEND_URL}${result.generatedImage}`}
             alt="Generated"
           />
         </div>
-
       </div>
 
       <h3>Generated Prompt</h3>
 
-      <div className="prompt-box">
-        {result.prompt}
-      </div>
-
+      <p>{result.prompt}</p>
     </div>
   );
 }
