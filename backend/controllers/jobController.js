@@ -2,51 +2,64 @@ const prisma = require("../config/prisma");
 const { generatePrompt } = require("../services/promptService");
 const { generateImage } = require("../services/imageService");
 
-
 exports.generateContent = async (req, res) => {
+  let job = null;
+
   try {
     const { productName, description } = req.body;
 
+    // Input Validation
+    if (!productName || !description || !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Product name, description and image are required.",
+      });
+    }
+
     // Create Job
-    const job = await prisma.job.create({
+    job = await prisma.job.create({
       data: {
         productName,
         description,
-        originalImage: req.file?.filename,
+        originalImage: req.file.filename,
         status: "PENDING",
       },
     });
 
-    // Generate Prompt
+    // Generate AI Prompt
     const prompt = await generatePrompt(productName, description);
 
-    // Update status to PROCESSING
+    // Update Job Status
     await prisma.job.update({
-      where: { id: job.id },
+      where: {
+        id: job.id,
+      },
       data: {
-        status: "PROCESSING",
         prompt,
+        status: "PROCESSING",
       },
     });
 
-    // Generate Image (placeholder)
+    // Generate Image (Placeholder)
     const generatedImage = await generateImage(
       prompt,
-      req.file?.filename
+      req.file.filename
     );
 
-    // Mark job as completed
+    // Complete Job
     const completedJob = await prisma.job.update({
-      where: { id: job.id },
+      where: {
+        id: job.id,
+      },
       data: {
         generatedImage,
         status: "COMPLETED",
       },
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Content generated successfully",
+      message: "Content generated successfully.",
       jobId: completedJob.id,
       status: completedJob.status,
       data: completedJob,
@@ -55,9 +68,26 @@ exports.generateContent = async (req, res) => {
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
+    // Mark Job as FAILED if it was already created
+    if (job) {
+      try {
+        await prisma.job.update({
+          where: {
+            id: job.id,
+          },
+          data: {
+            status: "FAILED",
+          },
+        });
+      } catch (updateError) {
+        console.error("Failed to update job status:", updateError);
+      }
+    }
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Internal Server Error",
+      error: error.message,
     });
   }
 };
@@ -65,6 +95,14 @@ exports.generateContent = async (req, res) => {
 exports.getJob = async (req, res) => {
   try {
     const jobId = parseInt(req.params.id);
+
+    // Validate Job ID
+    if (isNaN(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid job ID.",
+      });
+    }
 
     const job = await prisma.job.findUnique({
       where: {
@@ -75,11 +113,11 @@ exports.getJob = async (req, res) => {
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: "Job not found",
+        message: "Job not found.",
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: job,
     });
@@ -87,9 +125,10 @@ exports.getJob = async (req, res) => {
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Internal Server Error",
+      error: error.message,
     });
   }
 };
