@@ -7,13 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model Job {
-  id             Int      @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   productName    String
   description    String
   originalImage  String?
   prompt         String?
   generatedImage String?
-  status         String   @default("PENDING")
-  createdAt      DateTime @default(now())
+  status         JobStatus  @default(PENDING)
+  createdAt      DateTime   @default(now())
 }
