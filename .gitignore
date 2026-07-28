@@ -20,3 +20,7 @@ Thumbs.db
 
 # Prisma generated files (optional)
 prisma/dev.db
+
+.agents/
+.claude/
+.windsurf/
