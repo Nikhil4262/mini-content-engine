@@ -21,7 +21,7 @@ function ResultCard({ result }) {
           <h3>Generated Image</h3>
 
           <img
-            src={`${BACKEND_URL}${result.generatedImage}`}
+            src={`${BACKEND_URL}${result.generatedImage}?t=${Date.now()}`}
             alt="Generated"
           />
         </div>
